@@ -11,7 +11,7 @@ The original PlayStation 4 game runs directly on your PC: its own x86-64 code ru
 and the graphics are translated to Vulkan. No emulator window, no setup scripts: unpack the zip,
 start `Bloodborne.exe`, pick your game folder and press **PLAY**.
 
-**[Download the latest version](https://github.com/Supermedo/bloodborne_pc/releases/latest)** · **[Join the Discord](https://discord.gg/yTMG8c4Bqm)**
+**[Download the latest version](https://github.com/Ryansousa10/bloodborne_windows_mouse_and_keyboard/releases/latest)** · **[Join the Discord](https://discord.gg/yTMG8c4Bqm)**
 
 > **No game files are included.** You need your own decrypted dump of Bloodborne
 > (CUSA03173). Version 1.09 is needed for the community patches (60/90/unlocked FPS,
@@ -50,7 +50,7 @@ Nothing else to install: everything the game needs is in the zip.
 
 ## How to play
 
-1. Download the zip from [Releases](https://github.com/Supermedo/bloodborne_pc/releases/latest)
+1. Download the zip from [Releases](https://github.com/Ryansousa10/bloodborne_windows_mouse_and_keyboard/releases/latest)
    and unpack it anywhere.
 2. Start `Bloodborne.exe`.
 3. On **Game & effects**, choose your game folder (the one with `eboot.bin`).

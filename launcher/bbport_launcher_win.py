@@ -37,10 +37,11 @@ CONFIG_FILE = CONFIG_DIR / 'settings.json'
 PATCH_VERSION = '01.09'
 MAX_LOG_LINES = 6000
 NO_WINDOW = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
-# This build; GitHub release tags are windows-v<VERSION>.
-VERSION = '1.5'
-RELEASES_API = 'https://api.github.com/repos/Supermedo/bloodborne_pc/releases/latest'
-RELEASES_PAGE = 'https://github.com/Supermedo/bloodborne_pc/releases/latest'
+# This build; GitHub release tags are windows-v<VERSION>. The keyboard and mouse fork: its own
+# releases, so an update never replaces it with a build without its controls.
+VERSION = '1.5.1'
+RELEASES_API = 'https://api.github.com/repos/Ryansousa10/bloodborne_windows_mouse_and_keyboard/releases/latest'
+RELEASES_PAGE = 'https://github.com/Ryansousa10/bloodborne_windows_mouse_and_keyboard/releases/latest'
 UPDATE_DIR = Path(tempfile.gettempdir()) / 'bbport-update'
 # Never copied over an installation by an update (the package does not hold them either).
 USER_FILES = ('user', 'out', 'mods', 'bbport.ini', 'keybinds.ini', 'mods.json', 'patches.json', 'last_run.log')
