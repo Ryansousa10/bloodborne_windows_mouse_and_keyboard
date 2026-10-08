@@ -5,6 +5,19 @@
 
 static int capture;
 int bbgpu_overlay_captures_input(void) { return capture; }
+static float mouse_dx, mouse_wheel;
+static uint32_t mouse_buttons;
+void bbgpu_mouse_enable(int enabled) { (void)enabled; }
+void bbgpu_notify(const char *text, float seconds) { (void)text; (void)seconds; }
+void bbgpu_mouse_set_direct(void (*fn)(float dx, float dy)) { (void)fn; }
+int runtime_camhook_install(int no_auto_rotation) { (void)no_auto_rotation; return 0; }
+int runtime_camhook_active(void) { return 0; }
+void runtime_camhook_turn(float pitch, float yaw) { (void)pitch; (void)yaw; }
+int bbgpu_mouse_take(float *dx, float *dy, float *wheel, uint32_t *buttons) {
+    *dx=mouse_dx; *dy=0; *wheel=mouse_wheel; *buttons=mouse_buttons;
+    mouse_dx=mouse_wheel=0;
+    return 1;
+}
 uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *name) {
     (void)table; (void)count; (void)name;
     return 0;
@@ -38,6 +51,18 @@ int main(void) {
     assert(pad_read_state(1,&data)==0 && data.touch_count==1 && data.touches[0].x==1440);
     inject(path,"");
     assert(pad_read_state(1,&data)==0 && data.buttons==0 && data.touch_count==0);
+
+    /* Mouse (Dark Souls III layout): LMB is R1, motion tilts the right stick, a wheel step is
+     * a short d-pad press. */
+    mouse_buttons=SDL_BUTTON_MASK(SDL_BUTTON_LEFT);
+    assert(pad_read_state(1,&data)==0 && (data.buttons & BTN_R1) && !(data.buttons & BTN_R2));
+    mouse_buttons=0;
+    mouse_dx=40;
+    assert(pad_read_state(1,&data)==0 && data.right_x>128 && data.buttons==0);
+    mouse_wheel=1;
+    assert(pad_read_state(1,&data)==0 && (data.buttons & BTN_UP));
+    usleep(150000);
+    assert(pad_read_state(1,&data)==0 && data.buttons==0 && data.right_x==128);
 
     SDL_VirtualJoystickTouchpadDesc touch={.nfingers=2};
     SDL_VirtualJoystickDesc desc;
@@ -79,5 +104,5 @@ int main(void) {
     assert(SDL_DetachVirtualJoystick(id));
     SDL_Quit();
     unlink(path);
-    puts("PASS: pad ABI, debug camera chord, left/right clicks, SDL touch coordinates, overlay capture");
+    puts("PASS: pad ABI, mouse buttons/camera/wheel, debug camera chord, left/right clicks, SDL touch coordinates, overlay capture");
 }

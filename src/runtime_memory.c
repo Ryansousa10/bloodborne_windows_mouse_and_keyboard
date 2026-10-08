@@ -813,6 +813,9 @@ int runtime_memory_is_mapped(uintptr_t address, uint64_t size) {
     read_unlock();
     return result;
 }
+/* The game image (probe.c): runtime_camhook.c patches the camera code in it. */
+uintptr_t runtime_image_start;
+uint64_t runtime_image_size;
 void runtime_memory_report(void) {
     printf("Runtime: direct memory allocations=%zu, maps=%zu, live=%" PRIu64 ", budget=%" PRIu64 "\n",
            allocations, maps, live_bytes, POOL_SIZE);

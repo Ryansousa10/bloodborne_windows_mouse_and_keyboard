@@ -1,5 +1,10 @@
 # Bloodborne for Windows
 
+> **Keyboard & mouse fork** of [Supermedo/bloodborne_pc](https://github.com/Supermedo/bloodborne_pc):
+> the Dark Souls III key layout, a Controls page in the launcher and a native PC mouse camera
+> hooked into the game's own camera code. See [docs/KEYBOARD_MOUSE.md](docs/KEYBOARD_MOUSE.md)
+> · [Português](docs/KEYBOARD_MOUSE.pt-BR.md).
+
 **Bloodborne running natively on Windows 10 and 11, by [Supermedo](https://github.com/Supermedo) Mohammed Albarghouthi.**
 
 The original PlayStation 4 game runs directly on your PC: its own x86-64 code runs natively,
@@ -52,8 +57,16 @@ Nothing else to install: everything the game needs is in the zip.
 4. Press **PLAY**.
 
 In the game, **Insert** (or **L3+R3** on a controller) opens the settings menu.
-Keyboard: WASD move, arrows camera, Space Cross, Left Shift Circle, E Square, Q Triangle,
-1/3 L1/R1, R/F L2/R2, Z/C L3/R3, I/K/J/L d-pad, Enter Options, Tab touchpad.
+**Keyboard and mouse** (Dark Souls III layout, together with a controller): WASD move, the mouse
+turns the camera, left click attack, Shift+left click strong attack, right click transform,
+Shift+right click or Left Ctrl firearm, Space dodge/dash (press again while dashing to jump),
+E interact, R quick item, F blood vial, Q or wheel click lock on, arrows or the wheel switch
+items and weapons, Left Alt walk, G gestures, Tab game menu; in menus Enter confirms and Esc
+goes back. The mouse camera is native: a hook in the game's own camera code turns it by exact
+angles, without the stick's acceleration, auto-levelling or auto-rotation, on the sensitivity
+scale of Source games such as Deadlock. The launcher's **Controls** page rebinds everything
+(`keybinds.ini` next to `bbport.ini`). Details: [docs/KEYBOARD_MOUSE.md](docs/KEYBOARD_MOUSE.md)
+([Português](docs/KEYBOARD_MOUSE.pt-BR.md)).
 
 ## Known issues
 

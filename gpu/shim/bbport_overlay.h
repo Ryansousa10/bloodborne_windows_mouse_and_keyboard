@@ -39,4 +39,7 @@ bool CapturesInput();
 /// `active` is false; typing goes to the window (sdl_window), the box only displays it.
 void SetTextEntry(bool active, const std::string& prompt, const std::string& text);
 
+/// Any thread: a notice at the top of the screen for `seconds` (the camera finder, the mouse camera).
+void Notify(const std::string& text, float seconds);
+
 } // namespace BbOverlay

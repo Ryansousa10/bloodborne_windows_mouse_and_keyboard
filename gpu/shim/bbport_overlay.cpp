@@ -61,6 +61,10 @@ float base_scale = 1.0f;
 std::chrono::steady_clock::time_point last_present{};
 float frame_ms_avg = 0.0f;
 
+// A short notice at the top of the screen (Notify), guarded by imgui_mutex.
+std::string notice_text;
+std::chrono::steady_clock::time_point notice_until{};
+
 void SetOpen(bool value) {
     if (menu_open.exchange(value) == value) {
         return;
@@ -421,6 +425,22 @@ void TextEntryBox() {
     ImGui::End();
 }
 
+void Notice() {
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f,
+                                   viewport->WorkPos.y + 28.0f * base_scale),
+                            ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.75f);
+    ImGui::Begin("##notice", nullptr,
+                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
+                     ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::SetWindowFontScale(1.25f);
+    ImGui::TextColored(ImVec4(0.92f, 0.82f, 0.6f, 1.0f), "%s", notice_text.c_str());
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::End();
+}
+
 void FpsCounter() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const float pad = 12.0f * base_scale;
@@ -612,11 +632,19 @@ bool HandleEvent(const SDL_Event& event) {
 }
 
 bool Visible() {
-    return initialized && (menu_open || text_entry_active || BbSettings::Get().show_fps);
+    return initialized && (menu_open || text_entry_active || BbSettings::Get().show_fps ||
+                           std::chrono::steady_clock::now() < notice_until);
 }
 
 bool CapturesInput() {
     return menu_open || text_entry_active;
+}
+
+void Notify(const std::string& text, float seconds) {
+    std::scoped_lock lock{imgui_mutex};
+    notice_text = text;
+    notice_until = std::chrono::steady_clock::now() +
+                   std::chrono::milliseconds(static_cast<int>(seconds * 1000.0f));
 }
 
 void SetTextEntry(bool active, const std::string& prompt, const std::string& text) {
@@ -654,6 +682,9 @@ void Render(vk::CommandBuffer cmdbuf, vk::ImageView view, vk::Extent2D extent) {
     ImGui::NewFrame();
     if (menu_open) {
         Menu();
+    }
+    if (!menu_open && std::chrono::steady_clock::now() < notice_until) {
+        Notice();
     }
     if (BbSettings::Get().show_fps && !menu_open) {
         FpsCounter();

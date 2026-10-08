@@ -80,6 +80,34 @@ void WindowSDL::UpdateTextTitle() {
     BbOverlay::SetTextEntry(text_active, text_prompt, text);
 }
 
+bool WindowSDL::TakeMouse(float& dx, float& dy, float& wheel, u32& buttons) {
+    std::scoped_lock lock{mouse_mutex};
+    dx = mouse_dx;
+    dy = mouse_dy;
+    wheel = mouse_wheel;
+    buttons = mouse_held | mouse_clicked; // a click shorter than a game frame still counts
+    mouse_dx = mouse_dy = mouse_wheel = 0.0f;
+    mouse_clicked = 0;
+    return mouse_captured.load(std::memory_order_relaxed);
+}
+
+void WindowSDL::UpdateMouseCapture() {
+    const bool focused = (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) != 0;
+    const bool want = mouse_enabled.load(std::memory_order_relaxed) && focused && !text_active &&
+                      !BbOverlay::CapturesInput();
+    if (want != SDL_GetWindowRelativeMouseMode(window)) {
+        SDL_SetWindowRelativeMouseMode(window, want);
+    }
+    if (want != mouse_captured.load(std::memory_order_relaxed)) {
+        // Motion and buttons from before the capture (the click that focused the window) are
+        // not the game's.
+        std::scoped_lock lock{mouse_mutex};
+        mouse_dx = mouse_dy = mouse_wheel = 0.0f;
+        mouse_held = mouse_clicked = 0;
+        mouse_captured.store(want, std::memory_order_relaxed);
+    }
+}
+
 bool WindowSDL::PollEvents() {
     {
         std::scoped_lock lock{text_mutex};
@@ -93,6 +121,7 @@ bool WindowSDL::PollEvents() {
     if (!text_active) {
         BbOverlay::UpdateTextInput(window);
     }
+    UpdateMouseCapture();
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (text_active && (event.type == SDL_EVENT_TEXT_INPUT || event.type == SDL_EVENT_KEY_DOWN)) {
@@ -126,6 +155,36 @@ bool WindowSDL::PollEvents() {
             continue;
         }
         switch (event.type) {
+        case SDL_EVENT_MOUSE_MOTION:
+            if (mouse_captured.load(std::memory_order_relaxed)) {
+                if (const auto direct = mouse_direct.load(std::memory_order_acquire)) {
+                    direct(event.motion.xrel, event.motion.yrel);
+                    break;
+                }
+                std::scoped_lock lock{mouse_mutex};
+                mouse_dx += event.motion.xrel;
+                mouse_dy += event.motion.yrel;
+            }
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (mouse_captured.load(std::memory_order_relaxed)) {
+                std::scoped_lock lock{mouse_mutex};
+                const u32 mask = SDL_BUTTON_MASK(event.button.button);
+                if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                    mouse_held |= mask;
+                    mouse_clicked |= mask;
+                } else {
+                    mouse_held &= ~mask;
+                }
+            }
+            break;
+        case SDL_EVENT_MOUSE_WHEEL:
+            if (mouse_captured.load(std::memory_order_relaxed)) {
+                std::scoped_lock lock{mouse_mutex};
+                mouse_wheel += event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -event.wheel.y : event.wheel.y;
+            }
+            break;
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         case SDL_EVENT_WINDOW_RESIZED: {
             int w = 0, h = 0;

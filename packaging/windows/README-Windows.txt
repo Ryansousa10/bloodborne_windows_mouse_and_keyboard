@@ -27,8 +27,15 @@ Starting
 - Advanced -> "Launcher language": English, Russian, Arabic, Spanish, Portuguese, French,
   German, Italian, Polish, Turkish, Chinese, Japanese, Korean (default: the Windows language).
 - In the game, Insert (or L3+R3 on a gamepad) opens the port's menu (upscaler, resolution,
-  effects). Keyboard: WASD move, arrows camera, Space Cross, Left Shift Circle, E Square,
-  Q Triangle, 1/3 L1/R1, R/F L2/R2, Z/C L3/R3, I/K/J/L d-pad, Enter Options, Tab touchpad.
+  effects). Keyboard and mouse use the Dark Souls III layout and work together with a
+  controller: WASD move, the mouse turns the camera, left click attack, Shift+left click
+  strong attack, right click transform, Shift+right click or Left Ctrl firearm, Space
+  dodge/dash (again while dashing: jump), E interact, R quick item, F blood vial, Q or wheel
+  click lock on, arrows or the wheel switch items and weapons, Left Alt walk, G gestures, Tab
+  game menu; in menus Enter confirms and Esc goes back. The mouse turns the camera natively,
+  by exact angles as in PC games (sensitivity on the scale of Deadlock and other Source games).
+  The launcher's "Controls" page rebinds them (saved in keybinds.ini next to bbport.ini).
+  Alt+Tab or Insert frees the mouse.
 
 Data
 - Saves and shader caches: user\ next to Bloodborne.exe (the launcher can pick another folder).

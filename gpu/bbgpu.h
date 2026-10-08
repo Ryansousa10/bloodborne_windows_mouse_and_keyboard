@@ -28,6 +28,16 @@ void bbgpu_dump_guest_writes(void *ucontext);
  * no window exists; poll returns 0 typing, 1 confirmed, 2 cancelled (UTF-8 text). */
 int bbgpu_text_input_begin(const char *initial_utf8, const char *prompt_utf8);
 int bbgpu_text_input_poll(char *out_utf8, uint64_t size);
+/* Mouse for the game (runtime_pad.c): enable holds it in relative mode while the game window
+ * has focus and the menu is closed; take returns the motion (pixels), wheel steps and buttons
+ * (SDL_BUTTON_MASK, held or clicked) since the last call, and 1 while the mouse is held. */
+void bbgpu_mouse_enable(int enabled);
+/* Mouse motion (counts) to `fn` at once, from the window thread, instead of bbgpu_mouse_take
+ * (the native mouse camera); null turns it off. */
+void bbgpu_mouse_set_direct(void (*fn)(float dx, float dy));
+int bbgpu_mouse_take(float *dx, float *dy, float *wheel, uint32_t *buttons);
+/* A notice at the top of the game window for `seconds` (UTF-8). */
+void bbgpu_notify(const char *text, float seconds);
 /* 1 while the in-game settings menu is open: the game's pad input is held neutral. */
 int bbgpu_overlay_captures_input(void);
 /* Number of symbols registered by the vendored libraries (diagnostics). */

@@ -43,7 +43,7 @@ RELEASES_API = 'https://api.github.com/repos/Supermedo/bloodborne_pc/releases/la
 RELEASES_PAGE = 'https://github.com/Supermedo/bloodborne_pc/releases/latest'
 UPDATE_DIR = Path(tempfile.gettempdir()) / 'bbport-update'
 # Never copied over an installation by an update (the package does not hold them either).
-USER_FILES = ('user', 'out', 'mods', 'bbport.ini', 'mods.json', 'patches.json', 'last_run.log')
+USER_FILES = ('user', 'out', 'mods', 'bbport.ini', 'keybinds.ini', 'mods.json', 'patches.json', 'last_run.log')
 
 
 # ---------------------------------------------------------------------------------------------
@@ -97,6 +97,7 @@ def run_command():
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bbport_lang  # noqa: E402
+import bbport_controls  # noqa: E402
 
 LANG = 'en'
 
@@ -135,7 +136,7 @@ EFFECTS = [
 ]
 EXTRAS = [
     ('skip_intro', ('Skip the intro logos and movie', 'Пропуск заставок при запуске'), False),
-    ('debug_camera', ('Free camera (hold Cross + L3; keyboard Space + Z)', 'Свободная камера (Cross + L3 / Space + Z)'), False),
+    ('debug_camera', ('Free camera (hold Cross + L3; keyboard E + C)', 'Свободная камера (Cross + L3 / E + C)'), False),
     ('debug_menu', ('Game debug menu (left touchpad / Tab; needs the debug fonts)',
                     'Debug menu (левый touchpad / Tab; нужны шрифты)'), False),
 ]
@@ -289,6 +290,7 @@ def game_environment(s):
     env['BB_PATCHES_DIR'] = s['patches_dir'] or str(DATA_DIR / 'patches')
     env['BB_PATCHES_CONFIG'] = str(DATA_DIR / 'patches.json')
     env['BB_LANGUAGE'] = s['language']
+    env['BB_UI_LANGUAGE'] = LANG  # the port's own on-screen notices
     if str(s['player_name']).strip():
         env['BB_USER_NAME'] = str(s['player_name']).strip()
     env['BB_FULLSCREEN'] = '1' if s['fullscreen'] else '0'
@@ -553,6 +555,7 @@ class Launcher:
         self.nav, self.current_page = {}, None
         for name, title in (('play', _('Play', 'Играть')), ('graphics', _('Graphics', 'Графика')),
                             ('display', _('Display & FPS', 'Экран и FPS')), ('game', _('Game & effects', 'Игра и эффекты')),
+                            ('controls', _('Controls', 'Управление')),
                             ('cheats', _('Cheats', 'Читы')), ('mods', _('Mods & patches', 'Моды и патчи')),
                             ('advanced', _('Advanced', 'Дополнительно')),
                             ('log', _('Log', 'Журнал'))):
@@ -589,6 +592,7 @@ class Launcher:
         self.build_graphics()
         self.build_display()
         self.build_game()
+        self.build_controls()
         self.build_cheats()
         self.build_mods()
         self.build_advanced()
@@ -794,6 +798,13 @@ class Launcher:
             self.check(f, key, 'ini', _(*title))
         self.note(f, _('Effects and extras are game patches for version 1.09, applied at start.',
                        'Эффекты и дополнения — патчи игры для версии 1.09, применяются при запуске.'))
+
+    def build_controls(self):
+        f = self.scrolled_page('controls', _('Controls', 'Управление'),
+                               _('Keyboard and mouse, stored in keybinds.ini next to bbport.ini.',
+                                 'Клавиатура и мышь; хранится в keybinds.ini рядом с bbport.ini.'))
+        self.controls = bbport_controls.ControlsPage(
+            self, f, ini_path().parent / 'keybinds.ini', _, {'panel': PANEL, 'card': CARD, 'text': TEXT})
 
     def build_cheats(self):
         f = self.scrolled_page('cheats', _('Cheats', 'Читы'),
@@ -1077,6 +1088,7 @@ class Launcher:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         CONFIG_FILE.write_text(json.dumps(self.app, indent=2, ensure_ascii=False), encoding='utf-8')
         save_ini({key: self.ini[key] for key in INI_DEFAULTS}, self.ini_lines)
+        self.controls.collect()
         self.ini, self.ini_lines = load_ini()
         if self.mod_order:
             (DATA_DIR / 'mods.json').write_text(json.dumps(
@@ -1119,8 +1131,20 @@ class Launcher:
             self.root.after(5000, self.root.destroy)  # the game keeps running
 
     def read_output(self, process):
+        # Also into <saves folder>/last_run.log, as --play does, for bug reports.
+        log_dir = Path(self.app.get('user_dir') or DATA_DIR / 'user')
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log = open(log_dir / 'last_run.log', 'w', encoding='utf-8', buffering=1)
+        except OSError:
+            log = None
         for raw in iter(process.stdout.readline, b''):
-            self.output.put(raw.decode('utf-8', errors='replace'))
+            text = raw.decode('utf-8', errors='replace')
+            if log:
+                log.write(text)
+            self.output.put(text)
+        if log:
+            log.close()
         self.output.put((process.wait(),))
 
     def drain_output(self):
